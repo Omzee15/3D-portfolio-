@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Portfolio - Interactive Room</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #000;
+            overflow: hidden;
+            cursor: none;
+        }
+
+        #canvas-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            z-index: 1000;
+            transition: opacity 0.5s ease;
+        }
+
+        .loader {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top: 3px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        #progress-text {
+            font-size: 18px;
+            margin-top: 10px;
+        }
+
+        #ui-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        #info-panel {
+            position: absolute;
+            top: 30px;
+            left: 30px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            max-width: 300px;
+            pointer-events: auto;
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: all 0.3s ease;
+        }
+
+        #info-panel.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        #navigation {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            pointer-events: auto;
+        }
+
+        .nav-button {
+            padding: 12px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            font-size: 14px;
+        }
+
+        .nav-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .nav-button.active {
+            background: rgba(74, 144, 226, 0.8);
+            border-color: rgba(74, 144, 226, 1);
+        }
+
+        #custom-cursor {
+            position: fixed;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            transition: all 0.1s ease;
+            backdrop-filter: blur(2px);
+        }
+
+        #custom-cursor.hover {
+            width: 40px;
+            height: 40px;
+            border-color: rgba(74, 144, 226, 1);
+            background: rgba(74, 144, 226, 0.1);
+        }
+
+        .hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* Camera Control Panel */
+        #camera-controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 300px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            color: white;
+            font-size: 12px;
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+
+        #camera-controls.hidden {
+            transform: translateX(320px);
+        }
+
+        #camera-controls h4 {
+            margin-bottom: 15px;
+            color: #4a90e2;
+            font-size: 14px;
+        }
+
+        .control-group {
+            margin-bottom: 15px;
+        }
+
+        .control-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 11px;
+            opacity: 0.8;
+        }
+
+        .control-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .control-row input {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+            padding: 6px;
+            color: white;
+            font-size: 11px;
+            width: 70px;
+        }
+
+        .control-row span {
+            min-width: 15px;
+            font-size: 10px;
+            opacity: 0.6;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .control-button {
+            flex: 1;
+            padding: 8px 12px;
+            background: rgba(74, 144, 226, 0.8);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+            transition: all 0.2s ease;
+        }
+
+        .control-button:hover {
+            background: rgba(74, 144, 226, 1);
+        }
+
+        .control-button.secondary {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .control-button.secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        #toggle-controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 15px;
+            background: rgba(74, 144, 226, 0.8);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 12px;
+            z-index: 101;
+            transition: all 0.3s ease;
+        }
+
+        #toggle-controls:hover {
+            background: rgba(74, 144, 226, 1);
+        }
+
+        #code-output {
+            background: rgba(0, 0, 0, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+            padding: 10px;
+            margin-top: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 10px;
+            white-space: pre-wrap;
+            max-height: 100px;
+            overflow-y: auto;
+            color: #00ff00;
+        }
+
+        kbd {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+            padding: 2px 6px;
+            font-family: monospace;
+            font-size: 11px;
+        }
+    </style>
+</head>
+<body>
+    <div id="loading-screen">
+        <div class="loader"></div>
+        <div id="progress-text">Loading 3D Portfolio...</div>
+    </div>
+
+    <div id="canvas-container"></div>
+    
+    <div id="ui-overlay">
+        <div id="info-panel">
+            <h3>Welcome to My 3D Portfolio</h3>
+            <p>Click on objects in the room to explore different sections of my work.</p>
+            <div style="margin-top: 10px; font-size: 12px; opacity: 0.8;">
+                <strong>Controls:</strong><br>
+                • Press <kbd>H</kbd> to toggle axis helpers<br>
+                • Press <kbd>R</kbd> to reset camera<br>
+                • Press <kbd>F</kbd> to toggle first-person mode<br>
+                • <kbd>WASD</kbd> to move (first-person)<br>
+                • <kbd>Q</kbd>/<kbd>E</kbd> to move up/down<br>
+                • Mouse to orbit/look around
+            </div>
+        </div>
+
+        <div id="navigation">
+            <button class="nav-button active" data-camera="home">Home</button>
+            <button class="nav-button" data-camera="desk">Workspace</button>
+            <button class="nav-button" data-camera="projects">Projects</button>
+            <button class="nav-button" data-camera="about">About</button>
+        </div>
+    </div>
+
+    <div id="custom-cursor"></div>
+
+    <!-- Camera Control Panel -->
+    <button id="toggle-controls">📹 Camera Controls</button>
+    <div id="camera-controls" class="hidden">
+        <h4>📹 Live Camera Position Capture</h4>
+        
+        <div style="background: rgba(74, 144, 226, 0.1); padding: 10px; border-radius: 5px; margin-bottom: 15px; font-size: 11px;">
+            <strong>📝 Workflow:</strong><br>
+            1. Use <kbd>WASD</kbd> + <kbd>QE</kbd> to move around<br>
+            2. Use mouse to adjust your view<br>
+            3. Click "Get Current" when you find the perfect spot<br>
+            4. Click "Copy Code" to get complete animation code<br>
+            5. Send me the code to add it to your portfolio!
+        </div>
+        
+        <div class="control-group">
+            <label>📍 Camera Position</label>
+            <div class="control-row">
+                <span>X:</span>
+                <input type="number" id="cam-x" step="0.1" value="-7.69608">
+                <span>Y:</span>
+                <input type="number" id="cam-y" step="0.1" value="-12.1107">
+                <span>Z:</span>
+                <input type="number" id="cam-z" step="0.1" value="5.18539">
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label>🎯 Camera Target (Look At)</label>
+            <div class="control-row">
+                <span>X:</span>
+                <input type="number" id="target-x" step="0.1" value="0">
+                <span>Y:</span>
+                <input type="number" id="target-y" step="0.1" value="0">
+                <span>Z:</span>
+                <input type="number" id="target-z" step="0.1" value="0">
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label>🔧 Camera Properties</label>
+            <div class="control-row">
+                <span>FOV:</span>
+                <input type="number" id="cam-fov" step="1" value="75" min="10" max="120">
+                <span>Near:</span>
+                <input type="number" id="cam-near" step="0.01" value="0.1" min="0.01">
+                <span>Far:</span>
+                <input type="number" id="cam-far" step="10" value="1000" min="100">
+            </div>
+        </div>
+
+        <div class="button-group">
+            <button class="control-button" id="apply-camera">Apply Position</button>
+            <button class="control-button secondary" id="get-current">📍 Get Current</button>
+            <button class="control-button secondary" id="copy-code">📋 Copy Code</button>
+        </div>
+
+        <div id="code-output" style="display: none;"></div>
+    </div>
+
+    <!-- Three.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- GLTFLoader for loading GLB files -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <!-- OrbitControls for camera movement -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <!-- GSAP for smooth animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+    <script src="interactive-manager.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
