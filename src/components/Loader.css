@@ -1,0 +1,122 @@
+.loader-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  display: grid;
+  place-items: center;
+  background: #0a0a0a;
+  z-index: 9999;
+  transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.loader-container.slide-up {
+  transform: translateY(-100%);
+}
+
+.loader-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5rem;
+}
+
+svg.tea {
+  --secondary: #33406F;
+  transform: scale(3);
+}
+
+svg.tea #teabag {
+  transform-origin: top center;
+  transform: rotate(3deg);
+  animation: swing 2s infinite;
+}
+
+svg.tea #steamL {
+  stroke-dasharray: 13;
+  stroke-dashoffset: 13;
+  animation: steamLarge 2s infinite;
+}
+
+svg.tea #steamR {
+  stroke-dasharray: 9;
+  stroke-dashoffset: 9;
+  animation: steamSmall 2s infinite;
+}
+
+.loading-text {
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: #fff;
+  text-align: center;
+  animation: fadeIn 0.5s ease;
+  letter-spacing: 1px;
+}
+
+.enter-button {
+  padding: 1rem 2.5rem;
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: #fff;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  animation: fadeIn 0.5s ease;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.enter-button:hover {
+  color: #33406F;
+  transform: translateY(-2px);
+}
+
+.enter-button:active {
+  transform: translateY(0);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes swing {
+  50% {
+    transform: rotate(-3deg);
+  }
+}
+
+@keyframes steamLarge {
+  0% {
+    stroke-dashoffset: 13;
+    opacity: 0.6;
+  }
+  100% {
+    stroke-dashoffset: 39;
+    opacity: 0;
+  }
+}
+
+@keyframes steamSmall {
+  10% {
+    stroke-dashoffset: 9;
+    opacity: 0.6;
+  }
+  80% {
+    stroke-dashoffset: 27;
+    opacity: 0;
+  }
+  100% {
+    stroke-dashoffset: 27;
+    opacity: 0;
+  }
+}

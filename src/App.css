@@ -1,0 +1,28 @@
+#root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.app {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+.spline-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+/* Make sure the Spline canvas fills the container */
+.spline-container > canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
